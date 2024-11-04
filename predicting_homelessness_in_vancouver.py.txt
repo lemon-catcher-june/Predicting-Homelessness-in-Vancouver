@@ -1,0 +1,152 @@
+#######################################################
+#
+#   DH 520 Python Script
+#
+#   Name: June Yao
+#   Exercise: Predicting Homelessness in Vancouver (Final project) 
+#   Description: 
+#   Date: 2023/12/11
+#
+#   Non-Standard Modules needed: random
+#
+#######################################################
+
+
+#
+#   Relative File Paths: none needed
+#
+
+
+#######################################################
+
+# Code below:
+
+import random
+
+population = 2657000
+ANNUAL_POPULAITON_GROWTH = 0.0091
+HOMELESS_PEOPLE_2023 = 2420
+
+
+UNEMPLOYMENT_RATE = 0.047
+ADDICTION_RATE = 0.0049
+EVICTION_RATE = 0.004
+MENTAL_ILLNESS_RATE = 0.216
+DOMESTIC_ABUSE_RATE = 0.336
+PHYSICAL_ILLNESS_RATE = 0.410
+rate_list = [0.047, 0.0049, 0.004, 0.216, 0.336, 0.41]
+
+# data about top reasons for housing loss from the PiT census
+unemployment_factor = 0.28
+addiction_factor = 0.19
+eviction_factor = (
+    0.27  # Landlord/ tenant conflict and Unfit and Unsafe housing condition combined
+)
+mental_health_factor = 0.12
+domestic_abuse_factor = 0.12
+physical_illness_factor = 0.10
+factor_list = [0.28, 0.19, 0.27, 0.12, 0.12, 0.10]
+
+a_list_for_fator_and_rate = list(zip(factor_list, rate_list))
+
+
+# probability = HOMELESS_PEOPLE_2023 * unemployment_factor / (population * UNEMPLOYMENT_RATE)
+# calculate the probability of an unemployed individual becomig homeless
+def calculating_probability(factor, rate):
+    probability = HOMELESS_PEOPLE_2023 * factor / (population * rate)
+    # print(str(factor)+ " probability to homeless: ", probability)
+    return probability
+
+
+probability_list = []
+for x in a_list_for_fator_and_rate:
+    probability = calculating_probability(x[0], x[1])
+    probability_list.append(probability)
+
+# two key probabilities to calculate the homeless people in the population
+crucial_index = list(zip(rate_list, probability_list))
+
+
+# homeless people number in different groups
+def census(rate, probability, population_x):
+    homeless_people = 0
+    for x in range(population_x):
+        if random.random() <= rate:
+            if random.random() <= probability:
+                homeless_people += 1
+
+    return homeless_people
+
+
+max_list = []
+min_list = []
+max_year_list = []
+min_year_list = []
+max_homeless_simulation = []
+min_homeless_simulation = []
+# run the simulation 100 times, which can also be changed to larger number
+for i in range(10):  
+    # create empty list to store  key numbers including percentage and amount of homeless people,as well as the number of sheltered and unsheltered people  in each loop
+    homeless_over_years = []
+    percentage_list = []
+    years = []
+    for year in range(2024, 2034):  # predict homeless people amount in 10 years
+        homeless_people_list = []
+        population *= 1 + ANNUAL_POPULAITON_GROWTH
+        population = int(population)
+        years.append(year)
+        # to count the homeless people vunerable to different factors and store the numbers into the same list
+        for x in crucial_index:
+            homeless_people = census(x[0], x[1], population)
+            homeless_people_list.append(homeless_people)
+        # count the homeless people in a year, which should be the elements in the homeless_people_list added up
+        homeless_people = sum(homeless_people_list)
+        # data from PiT census for Vancouver, where there were 1815 sheltered homeless people and 605 unsheltered for a total of 2420 homeless people
+        homeless_over_years.append(homeless_people)
+        percentage_homeless = f"{(homeless_people / population):.4%}"
+        percentage_list.append(percentage_homeless)
+        # pair them up so as to present the data as group that contain crucial informaion  such as time and number of homeless people without a shelter
+        census_list = list(zip(percentage_list, homeless_over_years, years))
+        year += 1
+
+    for x in census_list:
+        if x[0] >= max(percentage_list):
+            max_list.append(x[0])
+            max_homeless_simulation.append(x[1])
+            max_year_list.append(x[2])
+
+        elif x[0] <= min(percentage_list):
+            min_list.append(x[0])
+            min_homeless_simulation.append(x[1])
+            min_year_list.append(x[2])
+
+max_final = list(zip(max_list, max_homeless_simulation, max_year_list))
+min_final = list(zip(min_list, min_homeless_simulation, min_year_list))
+
+for x in max_final:
+    if x[0] == max(max_list):
+        print(
+            "The maximum homeless people percentage is in ",
+            x[2],
+            "and is",
+            x[0],
+            " as ",
+            x[1],
+            "are homeless and ",
+            int(x[1] * 605 / 2420),
+            " unsheltered.",
+        )
+
+for x in min_final:
+    if x[0] == min(min_list):
+        print(
+            "The minimum homeless people percentage is in ",
+            x[2],
+            "and is",
+            x[0],
+            " as ",
+            x[1],
+            "are homeless and ",
+            int(x[1] * 605 / 2420),
+            " unsheltered.",
+        )
